@@ -4,5 +4,5 @@
     font-family: 'Mommy Lemon Regular';
     font-style: normal;
     font-weight: normal;
-    src: local('Mommy Lemon Regular'), url('Mommy Lemon.woff') format('woff');
+    src: local('Mommy Lemon Regular'), url('./Mommy%20Lemon.woff') format('woff');
     }
