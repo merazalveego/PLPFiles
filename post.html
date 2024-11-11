@@ -1,0 +1,93 @@
+<form class="form" id="postForm">
+    <label for="post-title">Post Title:</label>
+    <input type="text" id="post-title" placeholder="Enter Post Title" required>
+
+    <label for="image-url">Image URL:</label>
+    <input type="text" id="image-url" placeholder="Enter Image URL" required disabled>
+
+    <label for="image-upload">Upload Image:</label>
+    <input type="file" id="image-upload" accept="image/*">
+
+    <input type="submit" value="Generate Post">
+</form>
+
+<div class="generated-code" id="generatedCode">
+    <pre><code id="outputCode"></code></pre>
+</div>
+
+<script>
+    const GITHUB_API_URL = 'https://api.github.com/repos/merazalveego/plpfiles/contents/';
+    const GITHUB_TOKEN = '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';
+
+    document.getElementById('image-upload').addEventListener('change', async function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function () {
+            const base64Content = reader.result.split(',')[1];
+            const fileName = `images/${file.name}`;
+
+            try {
+                const response = await fetch(GITHUB_API_URL + fileName, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Upload image',
+                        content: base64Content
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('image-url').value = result.content.download_url;
+                    alert('Image uploaded successfully!');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                }
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('postForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const postTitle = document.getElementById('post-title').value;
+        const imageUrl = document.getElementById('image-url').value;
+        const vectorId = Math.floor(1000000000 + Math.random() * 9000000000);
+        const generatedCode = `<div><h1>${postTitle}</h1><img src="${imageUrl}" alt="${postTitle}"></div>`;
+
+        document.getElementById('outputCode').textContent = generatedCode;
+        document.getElementById('generatedCode').style.display = 'block';
+
+        try {
+            const response = await fetch(GITHUB_API_URL + `posts/${vectorId}.html`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Add generated post',
+                    content: btoa(unescape(encodeURIComponent(generatedCode)))
+                })
+            });
+
+            if (response.ok) {
+                alert('Post saved to GitHub successfully!');
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.message}`);
+            }
+        } catch (error) {
+            alert('Saving failed: ' + error.message);
+        }
+    });
+</script>
